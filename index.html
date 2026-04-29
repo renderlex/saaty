@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AHP - Saaty Method</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">AHP</span>
+                <h1 data-i18n="site_title">Метод Аналізу Ієрархій Сааті</h1>
+            </div>
+            <div class="header-controls">
+                <button class="lang-toggle" id="langToggle">
+                    <span class="lang-option active" data-lang="uk">UA</span>
+                    <span class="lang-divider">|</span>
+                    <span class="lang-option" data-lang="en">EN</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <button class="nav-tab active" data-tab="setup" data-i18n="tab_setup">Налаштування</button>
+        <button class="nav-tab" data-tab="criteria" data-i18n="tab_criteria">Критерії</button>
+        <button class="nav-tab" data-tab="alternatives" data-i18n="tab_alternatives">Альтернативи</button>
+        <button class="nav-tab" data-tab="results" data-i18n="tab_results">Результати</button>
+        <button class="nav-tab" data-tab="manual" data-i18n="tab_manual">Мануал</button>
+    </nav>
+
+    <main class="main">
+        <!-- SETUP TAB -->
+        <section class="tab-content active" id="tab-setup">
+            <div class="card">
+                <h2 data-i18n="setup_title">Налаштування аналізу</h2>
+                <p class="card-desc" data-i18n="setup_desc">Введіть назву задачі та визначте кількість критеріїв і альтернатив</p>
+                
+                <div class="form-group">
+                    <label for="taskName" data-i18n="task_name">Назва задачі / Ціль</label>
+                    <input type="text" id="taskName" data-i18n-placeholder="task_name_ph" placeholder="Наприклад: Вибір найкращого кандидата">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="criteriaCount" data-i18n="criteria_count">Кількість критеріїв</label>
+                        <input type="number" id="criteriaCount" min="2" max="10" value="3">
+                        <small data-i18n="criteria_count_hint">від 2 до 10</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="alternativesCount" data-i18n="alternatives_count">Кількість альтернатив</label>
+                        <input type="number" id="alternativesCount" min="2" max="10" value="3">
+                        <small data-i18n="alternatives_count_hint">від 2 до 10</small>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="btnSetupNext" data-i18n="btn_next">Далі →</button>
+            </div>
+        </section>
+
+        <!-- CRITERIA TAB -->
+        <section class="tab-content" id="tab-criteria">
+            <div class="card">
+                <h2 data-i18n="criteria_names_title">Назви критеріїв</h2>
+                <p class="card-desc" data-i18n="criteria_names_desc">Введіть назви для кожного критерію порівняння</p>
+                <div id="criteriaNamesContainer"></div>
+            </div>
+
+            <div class="card" id="criteriaComparisonCard">
+                <h2 data-i18n="criteria_comparison_title">Попарне порівняння критеріїв</h2>
+                <p class="card-desc" data-i18n="criteria_comparison_desc">Оцініть відносну важливість кожної пари критеріїв за шкалою Сааті</p>
+                <div id="criteriaComparisonContainer"></div>
+                <div class="consistency-indicator" id="criteriaConsistency"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="btnCriteriaBack" data-i18n="btn_back">← Назад</button>
+                <button class="btn btn-primary" id="btnCriteriaNext" data-i18n="btn_next">Далі →</button>
+            </div>
+        </section>
+
+        <!-- ALTERNATIVES TAB -->
+        <section class="tab-content" id="tab-alternatives">
+            <div class="card">
+                <h2 data-i18n="alternatives_names_title">Назви альтернатив</h2>
+                <p class="card-desc" data-i18n="alternatives_names_desc">Введіть назви для кожної альтернативи</p>
+                <div id="alternativesNamesContainer"></div>
+            </div>
+
+            <div id="alternativesComparisonsContainer"></div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="btnAlternativesBack" data-i18n="btn_back">← Назад</button>
+                <button class="btn btn-primary" id="btnAlternativesNext" data-i18n="btn_calculate">Розрахувати результати</button>
+            </div>
+        </section>
+
+        <!-- RESULTS TAB -->
+        <section class="tab-content" id="tab-results">
+            <div id="resultsContainer">
+                <div class="empty-state" id="emptyResults">
+                    <div class="empty-icon">📊</div>
+                    <h3 data-i18n="empty_results_title">Результати ще не розраховані</h3>
+                    <p data-i18n="empty_results_desc">Заповніть дані та натисніть "Розрахувати результати"</p>
+                </div>
+                <div id="resultsContent" style="display:none;"></div>
+            </div>
+        </section>
+
+        <!-- MANUAL TAB -->
+        <section class="tab-content" id="tab-manual">
+            <div class="manual-content">
+                <div class="card manual-card">
+                    <h2 data-i18n="manual_title">Що таке Метод Аналізу Ієрархій (AHP)?</h2>
+                    <p data-i18n="manual_intro">Метод Аналізу Ієрархій (AHP) — це структурована техніка для організації та аналізу складних рішень, розроблена Томасом Сааті у 1970-х роках. Вона поєднує математику та психологію для прийняття обґрунтованих рішень.</p>
+                </div>
+
+                <div class="card manual-card">
+                    <h2 data-i18n="manual_scale_title">Шкала Сааті (1-9)</h2>
+                    <table class="scale-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="scale_value">Значення</th>
+                                <th data-i18n="scale_meaning">Значення шкали</th>
+                                <th data-i18n="scale_desc">Опис</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td data-i18n="scale_1_meaning">Рівна важливість</td><td data-i18n="scale_1_desc">Два фактори однаково важливі</td></tr>
+                            <tr><td>2</td><td data-i18n="scale_2_meaning">Проміжне значення</td><td data-i18n="scale_2_desc">Між рівною та помірною перевагою</td></tr>
+                            <tr><td>3</td><td data-i18n="scale_3_meaning">Помірна перевага</td><td data-i18n="scale_3_desc">Досвід та інтуїція помірно підтримують один фактор</td></tr>
+                            <tr><td>4</td><td data-i18n="scale_4_meaning">Проміжне значення</td><td data-i18n="scale_4_desc">Між помірною та сильною перевагою</td></tr>
+                            <tr><td>5</td><td data-i18n="scale_5_meaning">Сильна перевага</td><td data-i18n="scale_5_desc">Досвід та інтуїція сильно підтримують один фактор</td></tr>
+                            <tr><td>6</td><td data-i18n="scale_6_meaning">Проміжне значення</td><td data-i18n="scale_6_desc">Між сильною та дуже сильною перевагою</td></tr>
+                            <tr><td>7</td><td data-i18n="scale_7_meaning">Дуже сильна перевага</td><td data-i18n="scale_7_desc">Фактор сильно переважає, це підтверджується на практиці</td></tr>
+                            <tr><td>8</td><td data-i18n="scale_8_meaning">Проміжне значення</td><td data-i18n="scale_8_desc">Між дуже сильною та абсолютною перевагою</td></tr>
+                            <tr><td>9</td><td data-i18n="scale_9_meaning">Абсолютна перевага</td><td data-i18n="scale_9_desc">Найвищий рівень підтвердження переваги одного фактора</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card manual-card">
+                    <h2 data-i18n="manual_steps_title">Як користуватися</h2>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3 data-i18n="step1_title">Налаштування</h3>
+                                <p data-i18n="step1_desc">Введіть назву задачі (наприклад, "Вибір автомобіля"), вкажіть кількість критеріїв порівняння та кількість альтернатив для оцінки.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3 data-i18n="step2_title">Визначення критеріїв</h3>
+                                <p data-i18n="step2_desc">Назвіть кожен критерій (наприклад: Ціна, Якість, Швидкість). Потім проведіть попарне порівняння — для кожної пари критеріїв оберіть, наскільки один важливіший за інший за шкалою 1-9.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3 data-i18n="step3_title">Оцінка альтернатив</h3>
+                                <p data-i18n="step3_desc">Назвіть альтернативи (наприклад: Варіант A, Варіант B). Для кожного критерію порівняйте альтернативи попарно — яка краща за цим критерієм.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3 data-i18n="step4_title">Результати</h3>
+                                <p data-i18n="step4_desc">Система автоматично розрахує ваги критеріїв, оцінки альтернатив, перевірить узгодженість ваших відповідей (CR < 0.1) та покаже фінальний рейтинг найкращої альтернативи.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card manual-card">
+                    <h2 data-i18n="manual_consistency_title">Індекс узгодженості (CR)</h2>
+                    <p data-i18n="manual_consistency_desc">Метод Сааті включає перевірку логічної узгодженості ваших відповідей. Відношення узгодженості (Consistency Ratio, CR) показує, наскільки ваші попарні порівняння є логічними.</p>
+                    <ul>
+                        <li data-i18n="manual_cr_good"><strong>CR &lt; 0.1 (10%)</strong> — прийнятна узгодженість, результати надійні</li>
+                        <li data-i18n="manual_cr_bad"><strong>CR ≥ 0.1 (10%)</strong> — рекомендуються переглянути порівняння</li>
+                    </ul>
+                    <p data-i18n="manual_cr_note">Якщо CR занадто високий, це означає, що ваші відповіді суперечливі (наприклад, A > B, B > C, але C > A). Перегляньте свої оцінки.</p>
+                </div>
+
+                <div class="card manual-card">
+                    <h2 data-i18n="manual_formula_title">Математична основа</h2>
+                    <p data-i18n="manual_formula_desc">Розрахунки включають:</p>
+                    <ol>
+                        <li data-i18n="manual_formula_1">Побудова матриці попарних порівнянь</li>
+                        <li data-i18n="manual_formula_2">Обчислення нормалізованих ваг (середнє геометричне)</li>
+                        <li data-i18n="manual_formula_3">Розрахунок максимального власного значення λmax</li>
+                        <li data-i18n="manual_formula_4">Індекс узгодженості: CI = (λmax - n) / (n - 1)</li>
+                        <li data-i18n="manual_formula_5">Відношення узгодженості: CR = CI / RI (де RI — випадковий індекс)</li>
+                        <li data-i18n="manual_formula_6">Синтез глобальних пріоритетів альтернатив</li>
+                    </ol>
+                    <p data-i18n="manual_formula_note">Випадкові індекси (RI) для різних розмірів матриці:</p>
+                    <table class="ri-table">
+                        <thead><tr><th>n</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead>
+                        <tbody><tr><td>RI</td><td>0</td><td>0</td><td>0.58</td><td>0.90</td><td>1.12</td><td>1.24</td><td>1.32</td><td>1.41</td><td>1.45</td><td>1.49</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p data-i18n="footer_text">Метод Аналізу Ієрархій Т. Сааті &copy; 2024</p>
+    </footer>
+
+    <script src="js/i18n.js"></script>
+    <script src="js/saaty.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
